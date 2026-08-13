@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "t3qFio+VvhnTfFyrWvCl0FvHAAPjWTKwo/rGg5UyMjc=",
+  "Source": "Sellby.Api",
+  "BasePath": "_content/Sellby.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
