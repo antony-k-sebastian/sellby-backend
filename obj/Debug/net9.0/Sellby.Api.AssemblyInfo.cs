@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Sellby.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5bebb486d0f28f8f06ef3287398e09ed4de09ec2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+00d870bae488bd71e87eebaca54b4e44016c7c11")]
 [assembly: System.Reflection.AssemblyProductAttribute("Sellby.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Sellby.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
