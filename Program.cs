@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Sellby.Api.Features.Auth;
 
@@ -8,6 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 // services here kinda acts like the bean in Java Springboot,for dependency injection.
 builder.Services.AddOpenApi();
+
+builder.Services
+.AddDbContext<AppDbContext>
+(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
