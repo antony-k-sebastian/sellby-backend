@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Sellby.Api.Common;
 
 namespace Sellby.Api.Features.Listings;
 
@@ -8,8 +10,10 @@ public static partial class ListingEndpoints
     {
         app.MapGet("/listings", async (
             AppDbContext db,
+            ClaimsPrincipal user,
             Guid? categoryId,
             string? search,
+            bool mine = false,
             int page = 1,
             int pageSize = 20) =>
         {
@@ -29,6 +33,16 @@ public static partial class ListingEndpoints
             if (!string.IsNullOrWhiteSpace(search))
             {
                 query = query.Where(l => EF.Functions.ILike(l.Title, $"%{search}%"));
+            }
+
+            if (mine)
+            {
+                if (user.Identity?.IsAuthenticated != true)
+                {
+                    return Results.Unauthorized();
+                }
+
+                query = query.Where(l => l.SellerId == user.GetUserId());
             }
 
             var listings = await query
