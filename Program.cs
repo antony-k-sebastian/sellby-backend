@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Sellby.Api.Features.Auth;
 using Sellby.Api.Features.Listings;
+using Sellby.Api.Features.Users;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -61,5 +62,8 @@ app.MapGetListingByIdEndpoint();
 app.MapCreateListingEndpoint();
 app.MapUpdateListingEndpoint();
 app.MapDeleteListingEndpoint();
+
+app.MapGetProfileEndpoint();
+app.MapDeleteAccountEndpoint();
 
 app.Run();
