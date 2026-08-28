@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Sellby.Api.Features.Auth;
+using Sellby.Api.Features.Listings;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,7 @@ var jwtKey = jwtSection["Key"];
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -53,5 +55,11 @@ app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapVerifyOtpEndpoint();
+
+app.MapGetListingsEndpoint();
+app.MapGetListingByIdEndpoint();
+app.MapCreateListingEndpoint();
+app.MapUpdateListingEndpoint();
+app.MapDeleteListingEndpoint();
 
 app.Run();
