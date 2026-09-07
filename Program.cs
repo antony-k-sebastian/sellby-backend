@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Sellby.Api.Features.Auth;
+using Sellby.Api.Features.Conversations;
 using Sellby.Api.Features.Listings;
 using Sellby.Api.Features.Users;
 
@@ -65,5 +66,10 @@ app.MapDeleteListingEndpoint();
 
 app.MapGetProfileEndpoint();
 app.MapDeleteAccountEndpoint();
+
+app.MapGetConversationsEndpoint();
+app.MapGetConversationMessagesEndpoint();
+app.MapSendConversationMessageEndpoint();
+app.MapStartListingConversationEndpoint();
 
 app.Run();

@@ -18,5 +18,26 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<OtpCode>().HasIndex(o => o.Email);
+
+        modelBuilder.Entity<Conversation>(entity =>
+        {
+            entity.HasOne(c => c.ParticipantOne)
+                .WithMany()
+                .HasForeignKey(c => c.ParticipantOneId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.ParticipantTwo)
+                .WithMany()
+                .HasForeignKey(c => c.ParticipantTwoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => new { c.ParticipantOneId, c.ParticipantTwoId }).IsUnique();
+        });
+
+        modelBuilder.Entity<Message>()
+            .HasOne(m => m.TaggedListing)
+            .WithMany()
+            .HasForeignKey(m => m.TaggedListingId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

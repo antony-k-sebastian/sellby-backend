@@ -11,6 +11,4 @@ public class Listing
 
     public Guid CategoryId { get; set; }
     public Category Category { get; set; } = null!;
-
-    public ICollection<Conversation> Conversations { get; set; } = new List<Conversation>();
 }
