@@ -9,8 +9,8 @@ namespace Sellby.Api.Specs.StepDefinitions.Feature.Authentication;
 public class UILoginSteps
 {
     private readonly IPage _page;
-    private string _email;
-    private string _password;
+    private string _email = "";
+    private string _password = "";
 
     private const string BaseUrl = "http://sellby.app";
 
