@@ -1,5 +1,4 @@
-using System.Security.Cryptography;
-using System.Text;
+// Features/Auth/AuthEndpoints.RequestOtp.cs
 using Microsoft.EntityFrameworkCore;
 using Sellby.Api.Models;
 
@@ -16,34 +15,28 @@ public static partial class AuthEndpoints
     {
         app.MapPost("/auth/request-otp", async (RequestOtpDto dto, AppDbContext db) =>
         {
-            var domain = dto.Email.Split('@').LastOrDefault();
-
-            if (domain is null || !AllowedDomains.Contains(domain))
+            if (!AuthLogic.IsAllowedDomain(dto.Email, AllowedDomains))
             {
                 return Results.BadRequest(new { message = "Please use your university email" });
             }
 
-            // Cooldown check: find the most recent OTP request for this email
             var lastOtp = await db.OtpCodes
                 .Where(o => o.Email == dto.Email)
                 .OrderByDescending(o => o.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            if (lastOtp is not null)
+            var secondsRemaining = AuthLogic.GetCooldownSecondsRemaining(
+                lastOtp?.CreatedAt, DateTime.UtcNow, ResendCooldown);
+
+            if (secondsRemaining is not null)
             {
-                var timeSinceLastRequest = DateTime.UtcNow - lastOtp.CreatedAt;
-                if (timeSinceLastRequest < ResendCooldown)
-                {
-                    var secondsRemaining = (int)(ResendCooldown - timeSinceLastRequest).TotalSeconds;
-                    return Results.Json(
-                        new { message = $"Please wait {secondsRemaining}s before requesting another OTP." },
-                        statusCode: StatusCodes.Status429TooManyRequests
-                    );
-                }
+                return Results.Json(
+                    new { message = $"Please wait {secondsRemaining}s before requesting another OTP." },
+                    statusCode: StatusCodes.Status429TooManyRequests
+                );
             }
 
-            var otp = Random.Shared.Next(100000, 999999).ToString();
-            var otpHash = HashOtp(otp);
+            var (otp, otpHash) = AuthLogic.GenerateOtp();
 
             var oldOtps = await db.OtpCodes
                 .Where(o => o.Email == dto.Email && !o.IsUsed)
@@ -70,12 +63,5 @@ public static partial class AuthEndpoints
 
             return Results.Ok(new { message = "Otp is sent." });
         });
-    }
-
-    private static string HashOtp(string otp)
-    {
-        var bytes = Encoding.UTF8.GetBytes(otp);
-        var hash = SHA256.HashData(bytes);
-        return Convert.ToHexString(hash);
     }
 }

@@ -1,8 +1,6 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+// Updated: Features/Auth/AuthEndpoints.VerifyOtp.cs
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+using Sellby.Api.Models;
 
 namespace Sellby.Api.Features.Auth;
 
@@ -14,25 +12,25 @@ public static partial class AuthEndpoints
     {
         app.MapPost("/auth/verify-otp", async (VerifyOtpDto dto, AppDbContext db, IConfiguration config) =>
         {
-            var otpHash = HashOtp(dto.Otp);
+            var otpHash = AuthLogic.HashOtp(dto.Otp);
 
             var otpRecord = await db.OtpCodes
                 .Where(o => o.Email == dto.Email && !o.IsUsed && o.ExpiredAt > DateTime.UtcNow)
                 .OrderByDescending(o => o.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            if (otpRecord is null || otpRecord.CodeHash != otpHash)
+            if (!AuthLogic.IsOtpValid(otpRecord?.CodeHash, otpHash))
             {
                 return Results.BadRequest(new { message = "Invalid or expired OTP." });
             }
 
-            otpRecord.IsUsed = true;
+            otpRecord!.IsUsed = true;
 
             var user = await db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user is null)
             {
-                if (string.IsNullOrWhiteSpace(dto.Name))
+                if (AuthLogic.RequiresNameForNewUser(dto.Name))
                 {
                     return Results.BadRequest(new { message = "Name is required for new users.", isNewUser = true });
                 }
@@ -41,7 +39,7 @@ public static partial class AuthEndpoints
                 {
                     Id = Guid.NewGuid(),
                     Email = dto.Email,
-                    Name = dto.Name,
+                    Name = dto.Name!,
                     CreatedAt = DateTime.UtcNow
                 };
                 db.Users.Add(user);
@@ -49,33 +47,15 @@ public static partial class AuthEndpoints
 
             await db.SaveChangesAsync();
 
-            var token = GenerateJwt(user, config);
+            var jwtSection = config.GetSection("Jwt");
+            var token = AuthLogic.GenerateJwt(
+                user,
+                jwtSection["Key"]!,
+                jwtSection["Issuer"]!,
+                jwtSection["Audience"]!,
+                double.Parse(jwtSection["ExpiryMinutes"]!));
 
             return Results.Ok(new { token, user = new { user.Id, user.Email, user.Name } });
         });
-    }
-
-    private static string GenerateJwt(User user, IConfiguration config)
-    {
-        var jwtSection = config.GetSection("Jwt");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("name", user.Name)
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: jwtSection["Issuer"],
-            audience: jwtSection["Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(double.Parse(jwtSection["ExpiryMinutes"]!)),
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
